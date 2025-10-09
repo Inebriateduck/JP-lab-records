@@ -1,0 +1,35 @@
+
+Usage: metaWRAP reassemble_bins [options] -o output_dir -b bin_folder -1 reads_1.fastq -2 reads_2.fastq
+
+Options:
+
+        -b STR          folder with metagenomic bins
+        -o STR          output directory
+        -1 STR          forward reads to use for reassembly
+        -2 STR          reverse reads to use for reassembly
+
+        --nanopore STR  nanopore reads to use for reassembly
+
+        -t INT          number of threads (default=1)
+        -m INT          memory in GB (default=40)
+        -c INT          minimum desired bin completion % (default=70)
+        -x INT          maximum desired bin contamination % (default=10)
+        -l INT          minimum contig length to be included in reassembly (default=500)
+
+        --strict-cut-off        maximum allowed SNPs for strict read mapping (default=2)
+        --permissive-cut-off    maximum allowed SNPs for permissive read mapping (default=5)
+        --skip-checkm           dont run CheckM to assess bins
+        --parallel              run spades reassembly in parallel, but only using 1 thread per bin
+        --mdmcleaner            the bin directory have results from MDMcleaner
+
+Apptainer> pwd 
+/quackers_tools/metaWRAP-1.3/bin/metawrap-modules
+Apptainer> cd ..
+Apptainer> ls
+config-metawrap  metawrap  metawrap-modules  metawrap-scripts
+Apptainer> cd ..
+Apptainer> ls
+bin  CHANGELOG  conda_pkg  flowcharts  installation  LICENSE  Module_descriptions.md  README.md  Usage_tutorial.md
+Apptainer> cd ..
+Apptainer> ls
+bbmap  checkm_data  cog_db  download_databases.sh  gapseq  gtdbtk_data  megahit  metaWRAP-1.3  metawrap-modules  metawrap-scripts  ncbi_hmms  pfam_db
