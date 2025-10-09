@@ -1,2 +1,0 @@
-Goal here is to get the quackers pipeline to work. It's currently crashing at step 3 (concoct) and I don't know why. Initial analysis of the available modules on trillium shows that concot is not an 
-available module. I'm wondering if thats the issue. Maybe I can install it in a VENV and call it for the pipeline?
