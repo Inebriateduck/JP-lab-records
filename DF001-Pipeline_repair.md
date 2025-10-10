@@ -83,7 +83,7 @@ According to NJ this is actually a really high yield. We now know that the pipel
 PYSCH! pipeline's cooked. See DF002 for more information. 
 
 ```
-Pipeline's Closed
+                            Pipeline's Closed
                                                                  
                                ░░░░░░░░░░░░░                             
                              ░░░░░░░▒░▒▒▒▒▒░░░░░░░                       
