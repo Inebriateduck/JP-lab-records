@@ -42,6 +42,11 @@ export OMP_NUM_THREADS=64
 
 ===== Results =====
 
+Running 
+```
+sbatch 7_116980_1_2.sh
+```
+
 Job request is complete. Tailing the logs file outputs:
 
 ```
