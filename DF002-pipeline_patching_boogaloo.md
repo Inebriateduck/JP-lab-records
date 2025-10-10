@@ -26,3 +26,23 @@ if [[ $? -ne 0 ]]; then
         echo "cannot find config-metawrap file - something went wrong with the installation!"
         exit 1
 ```
+
+Possible fix (still confirming)
+
+```
+Apptainer> unset -f which
+Apptainer> export PATH="/quackers_tools/metaWRAP-1.3/bin:$PATH"
+Apptainer> metawrap assembly --help
+```
+Testing fix 
+
+```
+metawrap bin_refinement \
+  -o /scratch/fry/child_mgx_out/7_116980_1_2/bin_refinement \
+  -t 8 \
+  -m 40 \
+  -c 70 \
+  -x 10 \
+  -A /scratch/fry/child_mgx_out/7_116980_1_2/3a_concoct_binning/bins \
+  -B /scratch/fry/child_mgx_out/7_116980_1_2/3b_maxbin2_binning/maxbin2/maxbin2_bins
+```
