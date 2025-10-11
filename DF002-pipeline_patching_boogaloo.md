@@ -93,3 +93,58 @@ metawrap bin_refinement \
 
 EOF
 ```
+
+The above script did workn initially, but failed to call the CheckM DB, which resulted in a failure to bin based on the best results. reworked it a bit.
+
+```
+#!/bin/bash 
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=192
+#SBATCH --time=10:00:00
+#SBATCH --job-name=bin_refinement_7_116980_1_2
+#SBATCH --output=/scratch/fry/bin_refinement.out
+#SBATCH --error=/scratch/fry/bin_refinement.err
+
+mkdir -p /scratch/fry/bin_refinement
+
+singularity exec -B /home -B /scratch /scratch/fry/quackers_v1.0.5.sif bash << 'EOF'
+
+unset -f which
+export PATH="/quackers_tools/metaWRAP-1.3/bin:$PATH"
+
+# Create wrapper that intercepts python2.7 calls
+mkdir -p /tmp/python_wrapper
+cat > /tmp/python_wrapper/python2.7 << 'PYWRAP'
+#!/bin/bash
+script="$1"
+# If it's binning_refiner.py (CheckM step), use python3
+if [[ "$script" == *"binning_refiner.py"* ]]; then
+    exec /opt/conda/bin/python3 "$@"
+else
+    # Everything else uses real python2.7 with its own packages
+    export PYTHONPATH=/usr/local/lib/python2.7/site-packages
+    exec /usr/local/bin/python2.7 "$@"
+fi
+PYWRAP
+chmod +x /tmp/python_wrapper/python2.7
+
+export PATH="/tmp/python_wrapper:$PATH"
+
+export CHECKM_DATA_PATH=/opt/conda/checkm_data
+checkm data setRoot /opt/conda/checkm_data
+
+export MPLCONFIGDIR=/tmp/matplotlib_config_$$
+mkdir -p $MPLCONFIGDIR
+
+metawrap bin_refinement \
+  -o /scratch/fry/bin_refinement \
+  -t 192 \
+  -m 100 \
+  -c 70 \
+  -x 10 \
+  -A /scratch/fry/child_mgx_out/7_116980_1_2/3a_concoct_binning/bins \
+  -B /scratch/fry/child_mgx_out/7_116980_1_2/3b_maxbin2_binning/maxbin2/maxbin2_bins \
+  -C /scratch/fry/child_mgx_out/7_116980_1_2/3c_metabat2_binning/metabat2/metabat2_bins
+
+EOF
+```
