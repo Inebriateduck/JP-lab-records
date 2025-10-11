@@ -5,7 +5,8 @@ What I'm going to do instead is to attempt to manually run metawrap and get the 
 
 ```
 singularity shell quackers_v1.0.5.sif
-cd quackers_pipe/quackers_tools
+cd /
+cd quackers_tools
 ```
 
 Attempting to run mwrap however, gives the following
