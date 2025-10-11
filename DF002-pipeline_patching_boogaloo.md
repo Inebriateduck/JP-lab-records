@@ -47,3 +47,49 @@ metawrap bin_refinement \
   -A /scratch/fry/child_mgx_out/7_116980_1_2/3a_concoct_binning/bins \
   -B /scratch/fry/child_mgx_out/7_116980_1_2/3b_maxbin2_binning/maxbin2/maxbin2_bins
 ```
+
+Testing with a batch submission (cluster go brrrrrr)
+
+```
+#!/bin/bash 
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=192
+#SBATCH --time=10:00:00
+#SBATCH --job-name=bin_refinement_7_116980_1_2
+#SBATCH --output=/scratch/fry/bin_refinement.out
+#SBATCH --error=/scratch/fry/bin_refinement.err
+
+mkdir -p /scratch/fry/bin_refinement
+
+# Singularity container
+singularity exec -B /home -B /scratch /scratch/fry/quackers_v1.0.5.sif bash << 'EOF'
+
+# "which" fix
+unset -f which
+
+export PATH="/quackers_tools/metaWRAP-1.3/bin:$PATH"
+
+# Python override (don't ask)
+mkdir -p /tmp/python_override
+ln -sf /opt/conda/bin/python3 /tmp/python_override/python2.7
+ln -sf /opt/conda/bin/python3 /tmp/python_override/python
+export PATH="/tmp/python_override:$PATH"
+
+# CheckM path correction (again, don't ask)
+export CHECKM_DATA_PATH=/opt/conda/checkm_data
+echo "/opt/conda/checkm_data" > /tmp/checkm_data_path.txt
+checkm data setRoot /opt/conda/checkm_data
+
+# Running function
+metawrap bin_refinement \
+  -o /scratch/fry/bin_refinement \
+  -t 192 \
+  -m 100 \
+  -c 70 \
+  -x 10 \
+  -A /scratch/fry/child_mgx_out/7_116980_1_2/3a_concoct_binning/bins \
+  -B /scratch/fry/child_mgx_out/7_116980_1_2/3b_maxbin2_binning/maxbin2/maxbin2_bins \
+  -C /scratch/fry/child_mgx_out/7_116980_1_2/3c_metabat2_binning/metabat2/metabat2_bins
+
+EOF
+```
