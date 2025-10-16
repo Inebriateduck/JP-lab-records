@@ -149,114 +149,8 @@ metawrap bin_refinement \
 EOF
 ```
 
-Wrapper to run the initial processing automatically
+Wrapper to run the initial processing automatically. This version also allows you to load the OPENBLAS threads variable up to 192 threads (jut don't touch the OMP threads)
 
-```
-set -x  # Enable debug mode
-
-INPUT_DIR="/scratch/fry/premature_stop_and_loop_test"
-OUTPUT_BASE="/scratch/fry/child_mgx_out"
-CONFIG_TEMPLATE="/scratch/fry/quackers.config.template"
-SIF_FILE="/scratch/fry/quackers_v1.0.5.sif"
-PREV_JOB_ID=""
-
-echo "Starting script..."
-echo "INPUT_DIR: $INPUT_DIR"
-echo "OUTPUT_BASE: $OUTPUT_BASE"
-
-if [[ ! -d "$INPUT_DIR" ]]; then
-    echo "ERROR: INPUT_DIR does not exist: $INPUT_DIR"
-    exit 1
-fi
-
-if [[ ! -f "$CONFIG_TEMPLATE" ]]; then
-    echo "ERROR: CONFIG_TEMPLATE does not exist: $CONFIG_TEMPLATE"
-    exit 1
-fi
-
-if [[ ! -f "$SIF_FILE" ]]; then
-    echo "ERROR: SIF_FILE does not exist: $SIF_FILE"
-    exit 1
-fi
-
-echo "All required files/dirs found. Starting loop..."
-
-for R1_FILE in "${INPUT_DIR}"/*_paired_1_cleaned.fastq; do
-    echo "Processing: $R1_FILE"
-
-    if [[ ! -f "$R1_FILE" ]]; then
-        echo "R1_FILE does not exist, skipping: $R1_FILE"
-        continue
-    fi
-
-    BASENAME=$(basename "${R1_FILE}")
-    JOBNAME=$(echo "${BASENAME}" | cut -d'_' -f1,2)
-    echo "JOBNAME: $JOBNAME"
-
-    R2_FILE=$(echo "${R1_FILE}" | sed 's/_paired_1_cleaned/_paired_2_cleaned/')
-    echo "R2_FILE: $R2_FILE"
-
-    if [[ ! -f "${R2_FILE}" ]]; then
-        echo "Skipping ${JOBNAME}, pair2 not found: $R2_FILE"
-        continue
-    fi
-
-    OUTDIR="${OUTPUT_BASE}/${JOBNAME}"
-    echo "Creating OUTDIR: $OUTDIR"
-    mkdir -p "${OUTDIR}" || { echo "Failed to create OUTDIR"; exit 1; }
-
-    CONFIG_FILE="${OUTDIR}/${JOBNAME}_config.ini"
-    cp "${CONFIG_TEMPLATE}" "${CONFIG_FILE}" || { echo "Failed to copy config"; exit 1; }
-
-    sed -i "s|FILE1|${R1_FILE}|g" "${CONFIG_FILE}"
-    sed -i "s|FILE2|${R2_FILE}|g" "${CONFIG_FILE}"
-    sed -i "s|PIPEOUTDIR|${OUTDIR}|g" "${CONFIG_FILE}"
-
-    SLURM_SCRIPT="${OUTDIR}/${JOBNAME}_quackers.sbatch"
-    echo "Creating SLURM_SCRIPT: $SLURM_SCRIPT"
-
-    # Use unquoted EOT so variables expand immediately
-    cat > "${SLURM_SCRIPT}" <<EOT
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=192
-#SBATCH --time=20:00:00
-#SBATCH --job-name=${JOBNAME}
-#SBATCH --output=${OUTDIR}/${JOBNAME}.out
-#SBATCH --error=${OUTDIR}/${JOBNAME}.err
-
-export OPENBLAS_NUM_THREADS=100
-export OMP_NUM_THREADS=100
-export MKL_NUM_THREADS=100
-export NUMEXPR_NUM_THREADS=100
-export BLIS_NUM_THREADS=100
-
-singularity exec -B /home -B /scratch ${SIF_FILE} python3 /quackers_pipe/quackers_pipe.py \
--1 ${R1_FILE} -2 ${R2_FILE} -o ${OUTDIR} -c ${CONFIG_FILE} --stop 3c_metabat2_binning
-EOT
-
-    echo "Script content:"
-    cat "${SLURM_SCRIPT}"
-
-    echo "Submitting job..."
-    if [[ -z "$PREV_JOB_ID" ]]; then
-        # First job - no dependency
-        JOB_OUTPUT=$(sbatch "${SLURM_SCRIPT}")
-    else
-        # Subsequent jobs - depend on previous job completion
-        JOB_OUTPUT=$(sbatch --dependency=afterok:${PREV_JOB_ID} "${SLURM_SCRIPT}")
-    fi
-
-    # Extract job ID from sbatch output
-    PREV_JOB_ID=$(echo "$JOB_OUTPUT" | awk '{print $NF}')
-    echo "Job submitted for $JOBNAME with ID: $PREV_JOB_ID"
-done
-```
-This version was supposed to stop at step 3c... it doesn't lmao. I want it to, since it's a huge waste of compute to run it all the way with a broken pipeline, but we'll take a win for now. 
-
-Also the second round broke at the concot binning, which probably means it overloaded the threads again... interesting. I wonder if it's possible to completely kill the job before moving on to the next one.
-
-Fixed it 
 
 ```
 #!/bin/bash
@@ -457,4 +351,20 @@ done
 echo "Script completed"
 ```
 
-I wonder if I can throttle up the threads to 192 now...
+I wonder if I can throttle up the threads to 192 now... (turns out you cant). 
+
+Running some timing tests - for a pair of 4.4gb files the runtime stats are as follows 
+
+```
+JobID           JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- --------
+258487         7_195178 rrg-jpark+   00:31:56                         00:00:00   00:00:00      0:0
+```
+
+multiply by 350 (approx) and you get 8 days to run the entire set. I think it might be worth submitting in multiple smaller batches. 
+
+```
+[fry@tri-login05 child_mgx_deep_data]$ find /scratch/fry/child_mgx_deep_data -maxdepth 1 -type f -name '*cleaned.fastq' | wc -l
+778
+```
+There's 778 total cleaned files, so 389 sets of complete reads total. I'm going to split them into bins of ~25 because that would give the jobs some leeway in terms of the max runtime on the cluster. 
