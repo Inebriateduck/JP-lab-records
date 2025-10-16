@@ -149,7 +149,7 @@ metawrap bin_refinement \
 EOF
 ```
 
-Wrapper 
+Wrapper to run the initial processing automatically
 
 ```
 set -x  # Enable debug mode
@@ -252,3 +252,4 @@ EOT
     echo "Job submitted for $JOBNAME with ID: $PREV_JOB_ID"
 done
 ```
+This version was supposed to stop at step 3c... it doesn't lmao. I want it to, since it's a huge waste of compute to run it all the way with a broken pipeline, but we'll take a win for now.
