@@ -368,3 +368,7 @@ multiply by 350 (approx) and you get 8 days to run the entire set. I think it mi
 778
 ```
 There's 778 total cleaned files, so 389 sets of complete reads total. I'm going to split them into bins of ~25 because that would give the jobs some leeway in terms of the max runtime on the cluster. 
+
+Any form of OPENMP or OPENBLAS multithreading might result in a crash at step 3a... I turned it off but now the program runs unbelievably slow (only 8 samples processed in almost 12 hours). 
+
+Attempting to reimplement multithreading
