@@ -371,4 +371,4 @@ There's 778 total cleaned files, so 389 sets of complete reads total. I'm going 
 
 Reimplementing multithreading results in a crash at anything over 48 threads in OPENBLAS / OPENMP. Even more confusing is that sometimes the warning will pop up but no crash occurs...
 
-Anyways I think I've got this section of the pipeline working now. 
+Anyways I think I've got this section of the pipeline working now. See DF003 for information on use and outputs.
