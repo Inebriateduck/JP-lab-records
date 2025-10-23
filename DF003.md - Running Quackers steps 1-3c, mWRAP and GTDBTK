@@ -424,4 +424,104 @@ echo "Check job status with: squeue -u ${USERNAME}"
 echo "Monitor progress with: watch -n 30 'squeue -u ${USERNAME}'"
 ```
 
+Once mWRAP is finished, I use a similar script to run GTDBTK to classify the samples. 
 
+```
+#!/bin/bash
+# Submit GTDB-Tk classification jobs for all sample bins
+
+# Configuration
+INPUT_DIR="/scratch/fry/child_mgx_out/Anathema.out"
+SCRATCH_DIR="/scratch/fry"
+GTDBTK_DB="/scratch/fry/gtdbtk_db/release226"   # <-- adjust if different
+MAX_CONCURRENT_JOBS=2
+USERNAME="fry"
+
+# ============= Counts running jobs =====================
+count_jobs() {
+    squeue -u ${USERNAME} -h -t PENDING,RUNNING 2>/dev/null | grep -c "gtdbtk_"
+}
+
+# ====== Input dir check ==============================
+if [ ! -d "${INPUT_DIR}" ]; then
+    echo "Error: Input directory ${INPUT_DIR} does not exist!"
+    exit 1
+fi
+
+# ====== Gather sample directories ====================
+samples=($(ls -d ${INPUT_DIR}/*/ 2>/dev/null | xargs -n 1 basename))
+if [ ${#samples[@]} -eq 0 ]; then
+    echo "No samples found under ${INPUT_DIR}"
+    exit 1
+fi
+
+echo "Found ${#samples[@]} samples"
+echo "Maintaining ${MAX_CONCURRENT_JOBS} concurrent GTDB-Tk jobs"
+echo ""
+
+submitted=0
+for sample in "${samples[@]}"; do
+    BIN_DIR="${INPUT_DIR}/${sample}/bin_refinement/metawrap_70_10_bins"
+    OUT_DIR="${INPUT_DIR}/${sample}/gtdbtk_out"
+
+    if [ ! -d "${BIN_DIR}" ]; then
+        echo "WARNING: Skipping ${sample} (no bin_refinement/metawrap_70_10_bins folder)"
+        continue
+    fi
+
+    if [ -d "${OUT_DIR}" ] && [ -n "$(ls -A ${OUT_DIR} 2>/dev/null)" ]; then
+        echo "INFO: Skipping ${sample} (gtdbtk_out already populated)"
+        continue
+    fi
+
+    mkdir -p "${OUT_DIR}"
+
+# ====== SLURM script creation ================
+    cat > "/tmp/gtdbtk_${sample}.sh" << EOF
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=192
+#SBATCH --time=2:00:00
+#SBATCH --job-name=gtdbtk_${sample}
+#SBATCH --output=${SCRATCH_DIR}/gtdbtk_${sample}.out
+#SBATCH --error=${SCRATCH_DIR}/gtdbtk_${sample}.err
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@ ===== GTDBTK - May need to be modified by user ======== @@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+module load gtdbtk/2.3.2 || true
+source /home/fry/Astaroth/bin/activate || true
+
+echo "Running GTDB-Tk for ${sample} at \$(date)"
+gtdbtk classify_wf \\
+  --genome_dir ${BIN_DIR} \\
+  --out_dir ${OUT_DIR} \\
+  --data_dir ${GTDBTK_DB} \\
+  --cpus 64
+
+echo "GTDB-Tk completed for ${sample} at \$(date)"
+EOF
+
+# ===== Submit job ================================
+    job_output=$(sbatch "/tmp/gtdbtk_${sample}.sh" 2>&1)
+    if [ $? -eq 0 ]; then
+        job_id=$(echo ${job_output} | awk '{print $NF}')
+        ((submitted++))
+        echo "[$(date '+%H:%M:%S')] Submitted ${sample} (Job ID: ${job_id}) - ${submitted}/${#samples[@]}"
+    else
+        echo "ERROR: Failed to submit ${sample}: ${job_output}"
+    fi
+
+ # ==== Wait for slots =============================
+    current_jobs=$(count_jobs)
+    while [ ${current_jobs} -ge ${MAX_CONCURRENT_JOBS} ]; do
+        echo "[$(date '+%H:%M:%S')] ${current_jobs}/${MAX_CONCURRENT_JOBS} active jobs. Waiting..."
+        sleep 60
+        current_jobs=$(count_jobs)
+    done
+done
+
+echo ""
+echo "All GTDB-Tk classification jobs submitted!"
+echo "Monitor with: squeue -u ${USERNAME} | grep gtdbtk"
+```
