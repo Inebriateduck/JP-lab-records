@@ -27,11 +27,13 @@ git clone https://github.com/yassourlab/MetaPhlAn-B.infantis/
 ```
 
 Setting up the DB was a real pain and required updating some of the keys since the infantis markers were built with an older version of metaphlan. I used Sed to find and replace the key locations in the infantis script since the locations were hardcoded in. 
-```
-Old key
-k__Bacteria|p__Actinobacteria|c__Actinomycetia|o__Bifidobacteriales|f__Bifidobacteriaceae|g__Bifidobacterium|s__Bifidobacterium_longum|t__SGB17248
 
+Old key
+```
+k__Bacteria|p__Actinobacteria|c__Actinomycetia|o__Bifidobacteriales|f__Bifidobacteriaceae|g__Bifidobacterium|s__Bifidobacterium_longum|t__SGB17248
+```
 New key
+```
 k__Bacteria|p__Actinomycetota|c__Actinomycetes|o__Bifidobacteriales|f__Bifidobacteriaceae|g__Bifidobacterium|s__Bifidobacterium_longum|t__SGB17248
 ```
 Merging the DBs
