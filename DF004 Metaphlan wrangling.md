@@ -34,7 +34,10 @@ k__Bacteria|p__Actinobacteria|c__Actinomycetia|o__Bifidobacteriales|f__Bifidobac
 New key
 k__Bacteria|p__Actinomycetota|c__Actinomycetes|o__Bifidobacteriales|f__Bifidobacteriaceae|g__Bifidobacterium|s__Bifidobacterium_longum|t__SGB17248
 ```
-
+Merging the DBs
+```
+python3 metaphlan_longum_markers.py --mpa-db-directory /scratch/fry/Astaroth/lib/python3.10/site-packages/metaphlan/metaphlan_databases
+```
 
 
 
