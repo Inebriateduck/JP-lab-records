@@ -41,8 +41,18 @@ Merging the DBs
 python3 metaphlan_longum_markers.py --mpa-db-directory /scratch/fry/Astaroth/lib/python3.10/site-packages/metaphlan/metaphlan_databases
 ```
 
+Now I need to test that the new DB actually works. I'm going to be using the data from [Ennis et al.](https://www.nature.com/articles/s41467-024-45209-y) who also made the infantis markers. Their Bioproject has 80 different reads and they collected 80 stool samples so I should be able to just pick and assemble a single fastQ file and run that as a test. 
 
+Using ENA to download a select sample 
+```
+wget -nc ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR252/030/SRR25256430/SRR25256430.fastq.gz
+```
 
+Running through my established workflow. Anathema_infantis.sh is a modified version of Anathema.sh made to accept just a single read since there is no reverse read in the Ennis DB. 
+
+```
+mass_cleaner.sh -> Anathema_infantis -> metawrap -> metaphlan
+```
 
 
 
