@@ -424,7 +424,7 @@ echo "Check job status with: squeue -u ${USERNAME}"
 echo "Monitor progress with: watch -n 30 'squeue -u ${USERNAME}'"
 ```
 
-Once mWRAP is finished, I use a similar script to run GTDBTK to classify the samples. 
+Once mWRAP is finished, I use a similar script to run GTDBTK to classify the samples. Note that the venv here is my own one, you'll need 
 
 ```
 #!/bin/bash
@@ -486,9 +486,9 @@ for sample in "${samples[@]}"; do
 #SBATCH --output=${SCRATCH_DIR}/gtdbtk_${sample}.out
 #SBATCH --error=${SCRATCH_DIR}/gtdbtk_${sample}.err
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# @@ ===== GTDBTK - May need to be modified by user ======== @@
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@ ===== GTDBTK - Input may need to be modified by user ======== @@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 module load gtdbtk/2.3.2 || true
 source /home/fry/Astaroth/bin/activate || true
 
