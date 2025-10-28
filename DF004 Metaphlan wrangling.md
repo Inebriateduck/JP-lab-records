@@ -56,6 +56,8 @@ Running through my established workflow. Anathema_infantis.sh is a modified vers
 mass_cleaner.sh -> Anathema_infantis -> metawrap -> metaphlan
 ```
 
+... Ennis et al. didn't use paired end reads, it's just single direction as far as I can tell. They didn't even assemble MAGs... I cannot use this as a control. John has reached out to Aline who originally modified the DB for use on a bangladeshi cohort - we're going to see if I can use some of their data as a control. 
 
+Downloading Alines data from 
 
 
