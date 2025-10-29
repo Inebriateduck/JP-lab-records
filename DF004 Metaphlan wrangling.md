@@ -63,5 +63,5 @@ Downloading Alines data from
 wget -nc ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR140/062/ERR14043662/ERR14043662_1.fastq.gz
 wget -nc ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR140/062/ERR14043662/ERR14043662_2.fastq.gz
 ```
-
+The data is then run through the Anathema.sh script to complete the first 3 steps of the quackers pipeline, and Helios.sh to complete metawrap. 
 
