@@ -63,7 +63,6 @@ Downloading Alines data from
 wget -nc ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR140/062/ERR14043662/ERR14043662_1.fastq.gz
 wget -nc ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR140/062/ERR14043662/ERR14043662_2.fastq.gz
 ```
-The data is then run through the Anathema.sh script to complete the first 3 steps of the quackers pipeline, and Helios.sh to complete metawrap. 
 
 My modified version of metaphlan must include several adjustments. 
 ```
@@ -71,4 +70,10 @@ The database is saved under /scratch/fry/Astaroth/bin/MetaPhlAn-B.infantis/mpa_v
 To run Metaphlan with this database add these flags:
 --bowtie2db /scratch/fry/Astaroth/bin/MetaPhlAn-B.infantis
 --index mpa_vJan25_CHOCOPhlAnSGB_lon_subsp
+```
+
+Metaphlan is then run on the original fastq files 
+
+```
+metaphlan ERR14043662_paired_1_cleaned.fastq,ERR14043662_paired_2_cleaned.fastq --mapout metagenome.bowtie2.bz2 --db_dir /scratch/fry/Astaroth/bin/MetaPhlAn-B.infantis --index mpa_vJan25_CHOCOPhlAnSGB_lon_subsp --nproc 92 --input_type fastq -o infantis.control.txt --offline
 ```
