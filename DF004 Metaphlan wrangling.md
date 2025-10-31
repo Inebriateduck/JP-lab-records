@@ -39,7 +39,6 @@ k__Bacteria|p__Actinomycetota|c__Actinomycetes|o__Bifidobacteriales|f__Bifidobac
 Merging the DBs
 ```
 python3 metaphlan_longum_markers.py --mpa-db-directory /scratch/fry/Astaroth/lib/python3.10/site-packages/metaphlan/metaphlan_databases
-
 output location: /scratch/fry/Astaroth/bin/MetaPhlAn-B.infantis/mpa_vJan25_CHOCOPhlAnSGB_lon_subsp
 ```
 
@@ -77,3 +76,14 @@ Metaphlan is then run on the original fastq files
 ```
 metaphlan ERR14043662_paired_1_cleaned.fastq,ERR14043662_paired_2_cleaned.fastq --mapout metagenome.bowtie2.bz2 --db_dir /scratch/fry/Astaroth/bin/MetaPhlAn-B.infantis --index mpa_vJan25_CHOCOPhlAnSGB_lon_subsp --nproc 92 --input_type fastq -o infantis.control.txt --offline
 ```
+I keep getting a key error output when I try to run it. I'm not sure why, but I'm giving up for the day and have resorted to emailing Aline to request her orginial script. We'll see if a comparison helps. 
+
+Aline sent over the script they used - it's still for the older version of the keys, but lets see if anything is different when I modify it to use the new keys and ```mpa_vJan25_CHOCOPhlAnSGB_202503```
+
+        "infantis_ref_markers_panphlan_180923.fa",
+        "longum_subsp_ref_markers_panphlan_180923.fa",
+        "infantis_ref_markers_panphlan_180923_names.txt",
+        "longum_subsp_ref_markers_panphlan_180923_names.txt",
+        "length_infantis_ref_markers_panphlan_180923.txt",
+        "length_longum_subsp_ref_markers_panphlan_180923.txt"
+        
