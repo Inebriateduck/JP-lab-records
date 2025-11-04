@@ -295,7 +295,7 @@ So thats a problem... I've removed those files for now, but will hopefully revis
 
 Running that on the first 8 bins of samples (25 paired samples per bin) results in almost all the storage space on my scratch being used. I'm going to need to deleted the original bins 1-8 since they're taking up too much space. 
 
-Running mWRAP post cleanup on every folder via a wrapper. The following script moves through all the output folders from the previous step and pulls the best bins. The amount of jobs it can spin up is adjustable, but don't make too many or the sysadmin will get mad. The script below can be found under ```inferno.sh```
+Running mWRAP post cleanup on every folder via a wrapper. The following script moves through all the output folders from the previous step and pulls the best bins. The amount of jobs it can spin up is adjustable, but don't make too many or the sysadmin will get mad. The script below can be found under ```Samael.sh```
 
 ```
 #!/bin/bash
