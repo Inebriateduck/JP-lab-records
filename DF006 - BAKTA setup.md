@@ -58,8 +58,7 @@ Fetch DB versions...
         ... compatible DB versions: 1
 Download database: v6.0, type=full, 2025-02-24, DOI: 10.5281/zenodo.14916843, URL: https://zenodo.org/record/14916843/files/db.tar.xz...
 ```
-
-
+Testing it in a debugnode worked. SLURM script works as well and is called ```Wormwood.sh```. 
 
 
 
