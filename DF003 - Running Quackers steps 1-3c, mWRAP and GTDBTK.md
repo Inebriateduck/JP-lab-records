@@ -295,26 +295,29 @@ So thats a problem... I've removed those files for now, but will hopefully revis
 
 Running that on the first 8 bins of samples (25 paired samples per bin) results in almost all the storage space on my scratch being used. I'm going to need to deleted the original bins 1-8 since they're taking up too much space. 
 
-Running mWRAP post cleanup on every folder via a wrapper. The following script moves through all the output folders from the previous step and pulls the best bins. The amount of jobs it can spin up is adjustable, but don't make too many or the sysadmin will get mad. 
+Running mWRAP post cleanup on every folder via a wrapper. The following script moves through all the output folders from the previous step and pulls the best bins. The amount of jobs it can spin up is adjustable, but don't make too many or the sysadmin will get mad. The script below can be found under ```inferno.sh```
 
 ```
 #!/bin/bash
 
-# ====== Config ======
+# Configuration
 INPUT_DIR="/scratch/fry/child_mgx_out/Anathema.out"
 SCRATCH_DIR="/scratch/fry"
 MAX_CONCURRENT_JOBS=20
 USERNAME="fry"
 
+# Function to count running/pending jobs
 count_jobs() {
     squeue -u ${USERNAME} -h -t PENDING,RUNNING 2>/dev/null | grep -c "bin_refinement"
 }
 
+# Check if input directory exists
 if [ ! -d "${INPUT_DIR}" ]; then
     echo "Error: Input directory ${INPUT_DIR} does not exist!"
     exit 1
 fi
 
+# Get all sample directories
 samples=($(ls -d ${INPUT_DIR}/*/ 2>/dev/null | xargs -n 1 basename))
 
 if [ ${#samples[@]} -eq 0 ]; then
@@ -335,18 +338,22 @@ for sample in "${samples[@]}"; do
     B_PATH="${INPUT_DIR}/${sample}/3b_maxbin2_binning/maxbin2/maxbin2_bins"
     C_PATH="${INPUT_DIR}/${sample}/3c_metabat2_binning/metabat2/metabat2_bins"
 
+    # Check if required input directories exist
     if [ ! -d "${A_PATH}" ] || [ ! -d "${B_PATH}" ] || [ ! -d "${C_PATH}" ]; then
         echo "WARNING: Skipping ${sample} - missing required input directories"
         continue
     fi
 
+    # Skip if already processed
     if [ -d "${OUTPUT_DIR}" ] && [ -n "$(ls -A ${OUTPUT_DIR} 2>/dev/null)" ]; then
         echo "INFO: Skipping ${sample} - output directory already exists and is not empty"
         continue
     fi
 
+    # Create output directory
     mkdir -p "${OUTPUT_DIR}"
 
+    # Create SLURM script for this sample
     cat > "/tmp/submit_${sample}.sh" << EOF
 #!/bin/bash
 #SBATCH --nodes=1
@@ -356,13 +363,12 @@ for sample in "${samples[@]}"; do
 #SBATCH --output=${SCRATCH_DIR}/bin_refinement_${sample}.out
 #SBATCH --error=${SCRATCH_DIR}/bin_refinement_${sample}.err
 
-# ====== Singularity container =========
+# Singularity container
 singularity exec -B /home -B /scratch ${SCRATCH_DIR}/quackers_v1.0.5.sif bash << 'EOFINNER'
 unset -f which
 export PATH="/quackers_tools/metaWRAP-1.3/bin:\$PATH"
 
-# ======= Python 2.7 call interception ========
-
+# Create wrapper that intercepts python2.7 calls
 mkdir -p /tmp/python_wrapper_\$\$
 cat > /tmp/python_wrapper_\$\$/python2.7 << 'PYWRAP'
 #!/bin/bash
@@ -379,13 +385,15 @@ PYWRAP
 chmod +x /tmp/python_wrapper_\$\$/python2.7
 export PATH="/tmp/python_wrapper_\$\$:\$PATH"
 
+# CheckM path correction
 export CHECKM_DATA_PATH=/opt/conda/checkm_data
 checkm data setRoot /opt/conda/checkm_data
 
+# Matplotlib config directory (avoid conflicts)
 export MPLCONFIGDIR=/tmp/matplotlib_config_\$\$
 mkdir -p \$MPLCONFIGDIR
 
-# ====== mWRAP params ======
+# Running function
 metawrap bin_refinement \\
   -o ${OUTPUT_DIR} \\
   -t 192 \\
@@ -398,7 +406,7 @@ metawrap bin_refinement \\
 EOFINNER
 EOF
 
-# ========= Job Submission ==============
+    # Submit the job
     job_output=$(sbatch "/tmp/submit_${sample}.sh" 2>&1)
     if [ $? -eq 0 ]; then
         job_id=$(echo ${job_output} | awk '{print $NF}')
@@ -422,106 +430,4 @@ echo "Job submission complete!"
 echo "Total jobs submitted: ${submitted}"
 echo "Check job status with: squeue -u ${USERNAME}"
 echo "Monitor progress with: watch -n 30 'squeue -u ${USERNAME}'"
-```
-
-Once mWRAP is finished, I use a similar script to run GTDBTK to classify the samples. Note that the venv here is my own one, you'll need 
-
-```
-#!/bin/bash
-# Submit GTDB-Tk classification jobs for all sample bins
-
-# Configuration
-INPUT_DIR="/scratch/fry/child_mgx_out/Anathema.out"
-SCRATCH_DIR="/scratch/fry"
-GTDBTK_DB="/scratch/fry/gtdbtk_db/release226"   # <-- adjust if different
-MAX_CONCURRENT_JOBS=2
-USERNAME="fry"
-
-# ============= Counts running jobs =====================
-count_jobs() {
-    squeue -u ${USERNAME} -h -t PENDING,RUNNING 2>/dev/null | grep -c "gtdbtk_"
-}
-
-# ====== Input dir check ==============================
-if [ ! -d "${INPUT_DIR}" ]; then
-    echo "Error: Input directory ${INPUT_DIR} does not exist!"
-    exit 1
-fi
-
-# ====== Gather sample directories ====================
-samples=($(ls -d ${INPUT_DIR}/*/ 2>/dev/null | xargs -n 1 basename))
-if [ ${#samples[@]} -eq 0 ]; then
-    echo "No samples found under ${INPUT_DIR}"
-    exit 1
-fi
-
-echo "Found ${#samples[@]} samples"
-echo "Maintaining ${MAX_CONCURRENT_JOBS} concurrent GTDB-Tk jobs"
-echo ""
-
-submitted=0
-for sample in "${samples[@]}"; do
-    BIN_DIR="${INPUT_DIR}/${sample}/bin_refinement/metawrap_70_10_bins"
-    OUT_DIR="${INPUT_DIR}/${sample}/gtdbtk_out"
-
-    if [ ! -d "${BIN_DIR}" ]; then
-        echo "WARNING: Skipping ${sample} (no bin_refinement/metawrap_70_10_bins folder)"
-        continue
-    fi
-
-    if [ -d "${OUT_DIR}" ] && [ -n "$(ls -A ${OUT_DIR} 2>/dev/null)" ]; then
-        echo "INFO: Skipping ${sample} (gtdbtk_out already populated)"
-        continue
-    fi
-
-    mkdir -p "${OUT_DIR}"
-
-# ====== SLURM script creation ================
-    cat > "/tmp/gtdbtk_${sample}.sh" << EOF
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=192
-#SBATCH --time=2:00:00
-#SBATCH --job-name=gtdbtk_${sample}
-#SBATCH --output=${SCRATCH_DIR}/gtdbtk_${sample}.out
-#SBATCH --error=${SCRATCH_DIR}/gtdbtk_${sample}.err
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# @@ ===== GTDBTK - Input may need to be modified by user ======== @@
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-module load gtdbtk/2.3.2 || true
-source /home/fry/Astaroth/bin/activate || true
-
-echo "Running GTDB-Tk for ${sample} at \$(date)"
-gtdbtk classify_wf \\
-  --genome_dir ${BIN_DIR} \\
-  --out_dir ${OUT_DIR} \\
-  --data_dir ${GTDBTK_DB} \\
-  --cpus 64
-
-echo "GTDB-Tk completed for ${sample} at \$(date)"
-EOF
-
-# ===== Submit job ================================
-    job_output=$(sbatch "/tmp/gtdbtk_${sample}.sh" 2>&1)
-    if [ $? -eq 0 ]; then
-        job_id=$(echo ${job_output} | awk '{print $NF}')
-        ((submitted++))
-        echo "[$(date '+%H:%M:%S')] Submitted ${sample} (Job ID: ${job_id}) - ${submitted}/${#samples[@]}"
-    else
-        echo "ERROR: Failed to submit ${sample}: ${job_output}"
-    fi
-
- # ==== Wait for slots =============================
-    current_jobs=$(count_jobs)
-    while [ ${current_jobs} -ge ${MAX_CONCURRENT_JOBS} ]; do
-        echo "[$(date '+%H:%M:%S')] ${current_jobs}/${MAX_CONCURRENT_JOBS} active jobs. Waiting..."
-        sleep 60
-        current_jobs=$(count_jobs)
-    done
-done
-
-echo ""
-echo "All GTDB-Tk classification jobs submitted!"
-echo "Monitor with: squeue -u ${USERNAME} | grep gtdbtk"
 ```
