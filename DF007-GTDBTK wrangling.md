@@ -130,7 +130,7 @@ EOF
     sleep 2
 done
 ```
-I then extract the desired taxa with the following (which also generates a binary presence / absence matrix)
+I then extract the desired taxa with ```Gehenna.py``` (which also generates a binary presence / absence matrix) 
 
 ```
 #!/usr/bin/env python3
