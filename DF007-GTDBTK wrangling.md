@@ -256,5 +256,3 @@ bin.1   d__Bacteria;p__Actinomycetota;c__Actinomycetes;o__Actinomycetales;f__Bif
 ```
 Pattern checks out... that is B. infantis in several of our samples! 
 
-========== NEXT STEPS ===========================
-
