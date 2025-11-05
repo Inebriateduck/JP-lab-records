@@ -60,6 +60,9 @@ Download database: v6.0, type=full, 2025-02-24, DOI: 10.5281/zenodo.14916843, UR
 ```
 Testing it in a debugnode worked. SLURM script works as well and is called ```Wormwood.sh```. 
 
+========= Generation of circular plots =================
+So bakta has a tool in it's pipeline that generates plots of the genome which display the predicted proteins and coding/noncoding regions. If you run it in [COG mode](https://bakta.readthedocs.io/en/latest/cli/genomeplots.html) it will colour them based on clustered orthologous genes (COG). Unfortunately, I configured ```Wormwood.sh``` to run it in default mode. Thus I'm going to have to generate the plots from the .JSON files myself. 
+
 
 
 
