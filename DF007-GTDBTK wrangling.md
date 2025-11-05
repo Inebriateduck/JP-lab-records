@@ -384,3 +384,9 @@ bin.1   d__Bacteria;p__Actinomycetota;c__Actinomycetes;o__Actinomycetales;f__Bif
 ```
 Pattern checks out... that is B. infantis in several of our samples! 
 
+Searching in the excel file sample_priority (which lists some of the sample IDs alongside the age at which the sample was taken). 
+- 7_258174 is at 1 year
+- 7_358236 is at 1 year
+- The rest of the hits were not present in the document
+
+This is very unexpected. For next steps I think we need to dig through the metadata to find out why this is happening, and also see how the rest of the samples differ. I need to generate relative abundance as well. 
