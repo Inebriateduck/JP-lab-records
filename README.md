@@ -58,4 +58,35 @@ USERNAME="fry" <----- your username here
 echo "Monitor progress with: watch -n 30 'squeue -u ${USERNAME}'" <---- this is why you need your username
                                        ^--- Monitors every 30 seconds
 ```
+## Step 4: GTDBTK run
+GTDBTK is used to classify the MAGs generated in step 2 and binned in step 3 taxonomically. It can be run on the previously generated bins by running ```Brimstone.sh``` with appropriate modifactions
+```
+SIF_FILE="/scratch/fry/quackers_v1.0.5.sif" <----- quackers sif file location
+GTDBTK_DB_HOST="/scratch/fry/gtdbtk_db/release226" <----- GTDBTK DB location
+GTDBTK_DB_CONTAINER_TARGET="/quackers_tools/gtdbtk_data" 
+BASE_DIR="/scratch/fry/child_mgx_out/Anathema.out" <----- Step 2 output
+BIN_SUBDIR="bin_refinement/metawrap_70_10_bins" <------ Bins from Step 3
+SCRATCH_DIR="/scratch/fry" <------- your scratch dir here
+MAX_CONCURRENT_JOBS=2 <----- change to increase job number
+USERNAME="fry" <------ your unsername
+```
+## Step 5: BAKTA run
+Bakta is used to generate gene predictions for each MAG in each of the bins. Setting it up is a bit complicated - I would strongly reccommend first installing a mamba env or using mine which is preconfigured at /home/fry/miniforge3/envs/bakta_env (if you can access it). Installing in mamba is not that hard. 
+```
+##### ONCE MAMBA INSTALLED ###########
+apptainer exec --cleanenv \
+    --home /scratch/fry:/home/fry \ <---- your home dir
+    bakta.sif /opt/conda/bin/bakta \ 
+    --db /scratch/fry/bakta_db \ <------ where you want the db installed
+    --output /scratch/fry/bakta_db <---- where you want the output of the db
+```
+Once installed, you can run Bakta on your MAG bins by running ```Wormwood.sh``` with appropriate modifications. 
+
+```
+BASE_DIR="/scratch/fry/child_mgx_out/Anathema.out" <--- output from step 3
+BAKTA_DB="/scratch/fry/bakta_db/db" <--- bakta DB location
+CONDA_ENV="bakta_env"
+```
+This step will take the longet due to how it queues up jobs and the large amount it needs to do, even if each one only takes 15 mins max. 
+
 
