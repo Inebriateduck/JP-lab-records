@@ -1,6 +1,6 @@
 # Simplified version of my workflow with the JP lab
 
-This is designed to allow future use of my workflow until the quackers pipe is fully functional. All scripts in here are designed to be "fire and forget" - they can be run on an entire directory and will then iterate through the whole thing until completion. 
+This is designed to allow future use of my workflow. All scripts in here are designed to be "fire and forget" - they can be run on an entire directory and will then iterate through the whole thing until completion. 
 
 ##  Step 1: Cleaning 
 If you are using the same data that I was, the fastq files will need cleaning. This can be done via the mass_headercleaner.py and mass_headercleaner.sh scripts. once cleaned, move on to step 2. 
